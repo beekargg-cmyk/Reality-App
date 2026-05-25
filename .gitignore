@@ -1,0 +1,14 @@
+# Build binaries
+build/ssh_tool.exe
+
+# Intermediate build outputs
+vpncore.aar
+vpncore-sources.jar
+
+# Local config and scratch dirs
+scratch/
+olcrtc_src/
+.idea/
+.vscode/
+*.exe
+*.exe~

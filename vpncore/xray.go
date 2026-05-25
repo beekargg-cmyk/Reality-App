@@ -170,6 +170,84 @@ func StartXrayEngine(vlessLink string) error {
 	return nil
 }
 
+// StartXrayWithLocalSocks запускает ядро Xray, направляя весь трафик
+// из локального inbounds (10808) в локальный outbound SOCKS5 (указанный порт).
+// Эта функция используется для связки Xray с OlcRTC (Telemost).
+func StartXrayWithLocalSocks(outboundSocksPort int) error {
+	rawJsonConfig := fmt.Sprintf(`{
+		"log": {
+			"loglevel": "debug"
+		},
+		"dns": {
+			"servers": [
+				"tcp://1.1.1.1",
+				"tcp://8.8.8.8"
+			]
+		},
+		"routing": {
+			"domainStrategy": "AsIs",
+			"rules": [
+				{
+					"type": "field",
+					"inboundTag": [
+						"socks-in"
+					],
+					"port": 53,
+					"outboundTag": "dns-out"
+				}
+			]
+		},
+		"inbounds": [{
+			"tag": "socks-in",
+			"port": 10808,
+			"listen": "127.0.0.1",
+			"protocol": "socks",
+			"settings": {
+				"auth": "noauth",
+				"udp": true
+			}
+		}],
+		"outbounds": [
+			{
+				"protocol": "socks",
+				"settings": {
+					"servers": [{
+						"address": "127.0.0.1",
+						"port": %d
+					}]
+				}
+			},
+			{
+				"protocol": "dns",
+				"tag": "dns-out"
+			}
+		]
+	}`, outboundSocksPort)
+
+	pbConfig, err := serial.DecodeJSONConfig(strings.NewReader(rawJsonConfig))
+	if err != nil {
+		return fmt.Errorf("ошибка при чтении конфига Xray: %w", err)
+	}
+	
+	coreConfig, err := pbConfig.Build()
+	if err != nil {
+		return fmt.Errorf("ошибка при сборке конфига Xray: %w", err)
+	}
+
+	instance, err := core.New(coreConfig)
+	if err != nil {
+		return fmt.Errorf("ошибка при запуске ядра Xray: %w", err)
+	}
+
+	xrayInstance = instance
+	if err := xrayInstance.Start(); err != nil {
+		return fmt.Errorf("ядро Xray крашнулось при запуске: %w", err)
+	}
+
+	fmt.Printf("===== XRAY-CORE ЗАПУЩЕН! ТРАФИК ПРОБРАСЫВАЕТСЯ В SOCKS5 ПОРТ %d (OlcRTC) =====\n", outboundSocksPort)
+	return nil
+}
+
 // StopXrayEngine плавно останавливает ядро
 func StopXrayEngine() {
 	if xrayInstance != nil { // Исправлено на nil!
