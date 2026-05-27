@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-$GoDir = "C:\Users\beeka\OneDrive\Desktop\Go"
-$AndroidProjectDir = "C:\Users\beeka\AndroidStudioProjects\V2rayTunClone"
+$GoDir = Split-Path -Path $PSScriptRoot -Parent
+$AndroidProjectDir = "$GoDir\android"
 $LibsDir = "$AndroidProjectDir\app\libs"
 
 Write-Host "1. Compiling vpncore into AAR..." -ForegroundColor Cyan

@@ -31,17 +31,17 @@ func StartVPN(fd int, link string) {
 			fmt.Printf("[ОШИБКА] Не удалось запустить OlcRTC: %v\n", err)
 			return
 		}
-		// 2. Запускаем Xray, который стучится в этот локальный прокси
-		err = StartXrayWithLocalSocks(10809)
+		// 2. Запускаем Sing-Box, который стучится в этот локальный прокси
+		err = StartSingBoxWithLocalSocks(10809)
 		if err != nil {
-			fmt.Printf("[ОШИБКА] Не удалось запустить Xray для OlcRTC: %v\n", err)
+			fmt.Printf("[ОШИБКА] Не удалось запустить Sing-Box для OlcRTC: %v\n", err)
 			return
 		}
 	} else {
-		// Стандартный VLESS
-		err := StartXrayEngine(link)
+		// Стандартный VLESS или Naive
+		err := StartSingBoxEngine(link)
 		if err != nil {
-			fmt.Printf("[ОШИБКА] Не удалось запустить Xray: %v\n", err)
+			fmt.Printf("[ОШИБКА] Не удалось запустить Sing-Box: %v\n", err)
 			return
 		}
 	}
@@ -50,7 +50,7 @@ func StartVPN(fd int, link string) {
 	fmt.Println("[ЯДРО] Запускаем туннелирование (TUN -> SOCKS5)...")
 	go func() {
 		key := &engine.Key{
-			Proxy:    "socks5://127.0.0.1:10808", // Куда кидаем (открыт Xray-core inbounds)
+			Proxy:    "socks5://127.0.0.1:10808", // Куда кидаем (открыт Sing-Box SOCKS inbound)
 			Device:   fmt.Sprintf("fd://%d", fd),   // Откуда берем (Android VPN Service)
 			LogLevel: "debug",
 		}
@@ -58,14 +58,14 @@ func StartVPN(fd int, link string) {
 		engine.Start()
 	}()
 
-	fmt.Println("===== MAINFRAME ONLINE: ЯДРО XRAY С МАРШРУТИЗАЦИЕЙ ЗАПУЩЕНО! =====")
+	fmt.Println("===== MAINFRAME ONLINE: ЯДРО SING-BOX С МАРШРУТИЗАЦИЕЙ ЗАПУЩЕНО! =====")
 }
 
 // StopVPN - мягкая остановка
 func StopVPN() {
 	fmt.Println("Остановка сервисов...")
-	// Глушим Xray-core
-	StopXrayEngine()
+	// Глушим Sing-Box
+	StopSingBoxEngine()
 	// Глушим OlcRTC (если работал)
 	StopOlcRTCProxy()
 	// Глушим маршрутизацию tun2socks
