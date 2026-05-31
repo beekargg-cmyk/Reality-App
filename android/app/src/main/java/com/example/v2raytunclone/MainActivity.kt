@@ -176,8 +176,8 @@ fun HappVpnScreen(onConnectClick: (String, Boolean) -> Unit) {
     }
     var isLoading by remember { mutableStateOf(false) }
     var selectedServer by remember {
-        val savedHost = prefs.getString("selected_server_host", "")
-        val found = serversList.find { it.host == savedHost }
+        val savedLink = prefs.getString("selected_server_link", "")
+        val found = serversList.find { it.fullLink == savedLink }
         mutableStateOf(found ?: if (serversList.isNotEmpty()) serversList[0] else null)
     }
     var isConnected by remember { mutableStateOf(MyVpnService.isServiceRunning) }
@@ -196,7 +196,7 @@ fun HappVpnScreen(onConnectClick: (String, Boolean) -> Unit) {
     }
 
     LaunchedEffect(selectedServer) {
-        prefs.edit().putString("selected_server_host", selectedServer?.host ?: "").apply()
+        prefs.edit().putString("selected_server_link", selectedServer?.fullLink ?: "").apply()
     }
 
     Column(
@@ -246,7 +246,7 @@ fun HappVpnScreen(onConnectClick: (String, Boolean) -> Unit) {
                                     val newList = serversList.toMutableList()
                                     newList[index] = updatedServer
                                     serversList = newList
-                                    if (selectedServer?.host == server.host) {
+                                    if (selectedServer?.fullLink == server.fullLink) {
                                         selectedServer = updatedServer
                                     }
                                 }
@@ -281,7 +281,7 @@ fun HappVpnScreen(onConnectClick: (String, Boolean) -> Unit) {
                 items(serversList) { server ->
                     ServerCard(
                         server = server,
-                        isSelected = selectedServer?.host == server.host,
+                        isSelected = selectedServer?.fullLink == server.fullLink,
                         onClick = { selectedServer = server }
                     )
                 }
