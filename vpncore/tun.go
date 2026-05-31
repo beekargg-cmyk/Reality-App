@@ -1,7 +1,6 @@
 package vpncore
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -29,41 +28,6 @@ func (t *androidTUN) Read(b []byte) (int, error) {
 
 // Write (отправка) сырых сетевых пакетов обратно в телефон (в приложения)
 func (t *androidTUN) Write(b []byte) (int, error) {
-	// Экспериментальная фича: Сброс (drop) фейковых RST пакетов 
-	// Мы анализируем сырые IP пакеты и дропаем те, в которых взведен флаг TCP RST.
-	if EnableFakeRST && len(b) >= 20 {
-		version := b[0] >> 4
-		
-		if version == 4 { // Обработка IPv4
-			ihl := (b[0] & 0x0F) * 4
-			protocol := b[9]
-			
-			// Если пакет - TCP (6) и имеет достаточную длину
-			if protocol == 6 && len(b) >= int(ihl)+14 {
-				tcpFlags := b[ihl+13]
-				isRST := (tcpFlags & 0x04) != 0 // Маска 0x04 (00000100) вытаскивает флаг RST
-				
-				if isRST {
-					fmt.Println("[TUN-DPI] IPv4: Заблокирован входящий RST пакет!")
-					// Возвращаем длину пакета, словно он успешно доставлен (но он исчезает в пустоте)
-					return len(b), nil
-				}
-			}
-		} else if version == 6 && len(b) >= 54 { // Обработка IPv6 (заголовок всегда 40 байт + TCP)
-			protocol := b[6] // Поле Next Header в заголовке IPv6
-			
-			if protocol == 6 { // TCP
-				tcpFlags := b[40+13]
-				isRST := (tcpFlags & 0x04) != 0
-				
-				if isRST {
-					fmt.Println("[TUN-DPI] IPv6: Заблокирован входящий RST пакет!")
-					return len(b), nil
-				}
-			}
-		}
-	}
-
 	// Мы прочитали ответ из интернета и возвращаем его в телефон
 	return t.file.Write(b)
 }

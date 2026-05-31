@@ -146,6 +146,15 @@ func StartSingBoxEngine(link string) error {
 			"log": {
 				"level": "debug"
 			},
+			"dns": {
+				"servers": [
+					{
+						"tag": "dns-remote",
+						"address": "tcp://77.88.8.8",
+						"detour": "proxy"
+					}
+				]
+			},
 			"inbounds": [
 				{
 					"type": "socks",
@@ -178,7 +187,15 @@ func StartSingBoxEngine(link string) error {
 						}
 					}
 				}
-			]
+			],
+			"route": {
+				"rules": [
+					{
+						"protocol": "dns",
+						"action": "hijack-dns"
+					}
+				]
+			}
 		}`, config.Host, portNum, config.UUID, config.Flow, config.SNI, config.Finger, config.PublicKey, config.ShortId)
 
 	} else if strings.HasPrefix(link, "naive://") || strings.HasPrefix(link, "naive+https://") {
@@ -196,6 +213,15 @@ func StartSingBoxEngine(link string) error {
 		rawJsonConfig = fmt.Sprintf(`{
 			"log": {
 				"level": "debug"
+			},
+			"dns": {
+				"servers": [
+					{
+						"tag": "dns-remote",
+						"address": "tcp://77.88.8.8",
+						"detour": "proxy"
+					}
+				]
 			},
 			"inbounds": [
 				{
@@ -220,7 +246,15 @@ func StartSingBoxEngine(link string) error {
 						"server_name": "%s"
 					}
 				}
-			]
+			],
+			"route": {
+				"rules": [
+					{
+						"protocol": "dns",
+						"action": "hijack-dns"
+					}
+				]
+			}
 		}`, config.Host, portNum, config.Username, config.Password, config.SNI)
 	} else {
 		return fmt.Errorf("неподдерживаемый тип ссылки для Sing-Box")
@@ -234,6 +268,15 @@ func StartSingBoxWithLocalSocks(outboundSocksPort int) error {
 	rawJsonConfig := fmt.Sprintf(`{
 		"log": {
 			"level": "debug"
+		},
+		"dns": {
+			"servers": [
+				{
+					"tag": "dns-remote",
+					"address": "tcp://77.88.8.8",
+					"detour": "socks-out"
+				}
+			]
 		},
 		"inbounds": [
 			{
@@ -252,7 +295,15 @@ func StartSingBoxWithLocalSocks(outboundSocksPort int) error {
 				"server": "127.0.0.1",
 				"server_port": %d
 			}
-		]
+		],
+		"route": {
+			"rules": [
+				{
+					"protocol": "dns",
+					"action": "hijack-dns"
+				}
+			]
+		}
 	}`, outboundSocksPort)
 
 	return runSingBox(rawJsonConfig)

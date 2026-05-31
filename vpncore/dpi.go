@@ -9,15 +9,12 @@ import (
 var (
 	// EnableDPIFragmentation - включает/выключает разбиение ClientHello на части
 	EnableDPIFragmentation bool = false
-	// EnableFakeRST - включает логику подмены/сброса левых RST пакетов
-	EnableFakeRST bool = false
 )
 
 // SetDPISettings вызывается из Kotlin при переключении ползунков
 func SetDPISettings(fragmentation bool, fakeRst bool) {
 	EnableDPIFragmentation = fragmentation
-	EnableFakeRST = fakeRst
-	fmt.Printf("[DPI] Фрагментация: %v, Fake RST: %v\n", fragmentation, fakeRst)
+	fmt.Printf("[DPI] Фрагментация: %v\n", fragmentation)
 }
 
 // dpiFragmentationConn - наша "обёртка" вокруг реального интернет-соединения.
